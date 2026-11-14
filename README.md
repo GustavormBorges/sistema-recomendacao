@@ -1,4 +1,4 @@
-﻿# Sistema de Recomendação
+# Sistema de Recomendação
 
 Projeto da disciplina de Programação Estruturada: sistema de recomendação de produtos
 para clientes de uma loja de varejo, usando o **método da vizinhança** (filtragem
@@ -15,18 +15,20 @@ mais bem ranqueado o produto fica.
 | `ListaCompras.h/.cpp` | A1 | Lê o CSV e organiza clientes, produtos e a lista de compras de cada cliente |
 | `Similaridade.h/.cpp` | A2 | Monta a matriz de compras e calcula a matriz de similaridade entre clientes |
 | `Recomendacao.h/.cpp` | A3 | Gera os `k` produtos mais bem ranqueados para um cliente |
-| `teste_lista.cpp` | A1 | Testador: mostra os produtos comprados por clientes |
-| `teste_similaridade.cpp` | A2 | Testador: mostra o cliente mais similar a um cliente |
-| `teste_recomendacao.cpp` | A3 | Testador: mostra as recomendações para clientes |
+| `main_lista.cpp` | A1 | Programa testador: mostra os produtos comprados por clientes |
+| `main_similaridade.cpp` | A2 | Programa testador: mostra o cliente mais similar a um cliente |
+| `main_recomendacao.cpp` | A3 | Programa testador: mostra as recomendações para clientes |
+
+Os módulos não têm `main`: cada programa testador fica em um arquivo `main_*.cpp` separado.
 
 ## Como compilar
 
 Precisa do `g++`. Na pasta do projeto:
 
 ```
-g++ -o teste_lista teste_lista.cpp ListaCompras.cpp
-g++ -o teste_similaridade teste_similaridade.cpp ListaCompras.cpp Similaridade.cpp
-g++ -o teste_recomendacao teste_recomendacao.cpp ListaCompras.cpp Similaridade.cpp Recomendacao.cpp
+g++ -o lista main_lista.cpp ListaCompras.cpp
+g++ -o similaridade main_similaridade.cpp ListaCompras.cpp Similaridade.cpp
+g++ -o recomendacao main_recomendacao.cpp ListaCompras.cpp Similaridade.cpp Recomendacao.cpp
 ```
 
 ## Como executar
@@ -34,12 +36,12 @@ g++ -o teste_recomendacao teste_recomendacao.cpp ListaCompras.cpp Similaridade.c
 Exemplos de uso com os dados do professor (pasta `dados/`):
 
 ```
-teste_lista dados/dados_venda_cluster_0.csv 99EIP501 99PXGH01 48743701
-teste_similaridade dados/dados_venda_cluster_0.csv 153
-teste_recomendacao dados/dados_venda_cluster_0.csv 5 99EIP501 99PXGH01 48743701
+lista dados/dados_venda_cluster_0.csv 99EIP501 99PXGH01 48743701
+similaridade dados/dados_venda_cluster_0.csv 153
+recomendacao dados/dados_venda_cluster_0.csv 5 99EIP501 99PXGH01 48743701
 ```
 
-No Windows, use `teste_lista.exe` etc. (ou `.\teste_lista`).
+No Windows, use `lista.exe` etc. (ou `.\lista`).
 
 ## Observações sobre os dados
 

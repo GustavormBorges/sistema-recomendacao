@@ -1,11 +1,11 @@
 // ===========================================================================
-// Testador da ATIVIDADE 3 (Recomendacao)
+// MAIN da ATIVIDADE 3 (programa testador do modulo Recomendacao)
 //
 // Pede a recomendacao de k produtos para alguns clientes, usando o CODIGO
 // ORIGINAL do cliente, e mostra os nomes dos produtos recomendados.
 //
 // Como usar (no terminal):
-//     teste_recomendacao <arquivo.csv> <k> [cod_cliente1 cod_cliente2 ...]
+//     recomendacao <arquivo.csv> <k> [cod_cliente1 cod_cliente2 ...]
 //
 // Se nenhum codigo for informado, usa os 3 primeiros clientes do arquivo.
 // ===========================================================================
@@ -17,14 +17,14 @@
 #include "Recomendacao.h"
 
 // Mostra as compras do cliente i e depois os k produtos recomendados para ele.
-static void mostraRecomendacao(ListaCompras &lc, vector<vector<double> > &S, int i, int k) {
+static void mostrarRecomendacao(ListaCompras &lista, vector<vector<double> > &S, int i, int k) {
     int r;
     vector<ItemRanking> recomendados;
 
-    imprimeCompras(lc, i);
+    imprimirCompras(lista, i);
 
     // Chama o modulo Recomendacao.
-    recomendados = recomenda(lc, S, i, k);
+    recomendados = recomendar(lista, S, i, k);
 
     if (recomendados.size() == 0) {
         cout << "Nenhum produto para recomendar (nenhum cliente parecido)." << endl;
@@ -33,7 +33,7 @@ static void mostraRecomendacao(ListaCompras &lc, vector<vector<double> > &S, int
         for (r = 0; r < (int)recomendados.size(); r++) {
             // recomendados[r].produto e o indice do produto: pegamos o nome
             // dele no vetor de produtos. "valor" e a nota (menor = melhor).
-            cout << "   " << r + 1 << ". " << lc.produtos[recomendados[r].produto]
+            cout << "   " << r + 1 << ". " << lista.produtos[recomendados[r].produto]
                  << "  (valor " << recomendados[r].valor << ")" << endl;
         }
     }
@@ -41,7 +41,7 @@ static void mostraRecomendacao(ListaCompras &lc, vector<vector<double> > &S, int
 }
 
 int main(int argc, char *argv[]) {
-    ListaCompras lc;
+    ListaCompras lista;
     int k, i, a;
 
     // Precisa do arquivo e do k.
@@ -50,7 +50,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    if (carregaCompras(argv[1], lc) == 0) {
+    if (lerDados(argv[1], lista) == 0) {
         cout << "Erro ao abrir o arquivo " << argv[1] << endl;
         return 1;
     }
@@ -58,21 +58,21 @@ int main(int argc, char *argv[]) {
     k = atoi(argv[2]);   // texto "5" -> numero 5
 
     // A matriz de similaridade e calculada UMA vez e usada para todos os clientes.
-    vector<vector<double> > S = calculaSimilaridade(lc);
+    vector<vector<double> > S = calcularSimilaridade(lista);
 
     if (argc == 3) {
         // Sem codigos: usa os 3 primeiros clientes.
-        for (i = 0; i < 3 && i < (int)lc.clientes.size(); i++)
-            mostraRecomendacao(lc, S, i, k);
+        for (i = 0; i < 3 && i < (int)lista.clientes.size(); i++)
+            mostrarRecomendacao(lista, S, i, k);
     } else {
         // Com codigos: descobre o indice de cada um e mostra a recomendacao.
         for (a = 3; a < argc; a++) {
-            i = buscaCliente(lc, argv[a]);
+            i = buscarCliente(lista, argv[a]);
 
             if (i == -1)
                 cout << "Cliente " << argv[a] << " nao encontrado." << endl << endl;
             else
-                mostraRecomendacao(lc, S, i, k);
+                mostrarRecomendacao(lista, S, i, k);
         }
     }
 

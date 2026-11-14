@@ -19,18 +19,20 @@
 //   A  = matriz de compras      (linha = cliente, coluna = produto, 1 = comprou)
 //   I  = A x (A transposta)     I[i][j] = produtos em comum entre i e j
 //   S  = 1 - I[i][j] / |Pi|     matriz de similaridade
+//
+// Este arquivo NAO tem main: o main fica em arquivo separado (main_similaridade.cpp).
 // ===========================================================================
 
 #include "Similaridade.h"
 
 // ---------------------------------------------------------------------------
-// criaMatrizInt: cria uma matriz de inteiros (linhas x colunas) cheia de 0.
+// criarMatrizInt: cria uma matriz de inteiros (linhas x colunas) cheia de 0.
 //
 // Uma matriz aqui e um "vetor de vetores": cada linha e um vector<int>, e a
 // matriz e um vector dessas linhas. Montamos com push_back, o mesmo que o
 // professor mostra nos exemplos de vector. Depois acessamos matriz[i][j].
 // ---------------------------------------------------------------------------
-static vector<vector<int> > criaMatrizInt(int linhas, int colunas) {
+static vector<vector<int> > criarMatrizInt(int linhas, int colunas) {
     int i, j;
     vector<vector<int> > matriz;
 
@@ -44,11 +46,11 @@ static vector<vector<int> > criaMatrizInt(int linhas, int colunas) {
 }
 
 // ---------------------------------------------------------------------------
-// criaMatrizDouble: igual a anterior, mas de numeros com virgula (double)
+// criarMatrizDouble: igual a anterior, mas de numeros com virgula (double)
 // e cheia de 1.0. Usada para a matriz de similaridade, onde 1 quer dizer
 // "nada parecido" (e o valor padrao ate calcularmos o resto).
 // ---------------------------------------------------------------------------
-static vector<vector<double> > criaMatrizDouble(int linhas, int colunas) {
+static vector<vector<double> > criarMatrizDouble(int linhas, int colunas) {
     int i, j;
     vector<vector<double> > matriz;
 
@@ -62,7 +64,7 @@ static vector<vector<double> > criaMatrizDouble(int linhas, int colunas) {
 }
 
 // ---------------------------------------------------------------------------
-// criaMatrizCompras: monta a matriz A (n clientes x m produtos).
+// criarMatrizCompras: monta a matriz A (n clientes x m produtos).
 //   A[i][p] = 1 se o cliente i comprou o produto p
 //   A[i][p] = 0 se nao comprou
 //
@@ -71,28 +73,32 @@ static vector<vector<double> > criaMatrizDouble(int linhas, int colunas) {
 //     Joao     0  1  1  0  0  1
 //     Fulano   1  0  1  0  0  0
 // ---------------------------------------------------------------------------
-vector<vector<int> > criaMatrizCompras(ListaCompras &lc) {
-    int n = lc.clientes.size();   // numero de clientes (linhas)
-    int m = lc.produtos.size();   // numero de produtos (colunas)
-    int i;
-    vector<vector<int> > A = criaMatrizInt(n, m);   // comeca tudo com 0
+vector<vector<int> > criarMatrizCompras(ListaCompras &lista) {
+    int n = lista.clientes.size();   // numero de clientes (linhas)
+    int m = lista.produtos.size();   // numero de produtos (colunas)
+    int i, j, total, idProduto;
+    vector<vector<int> > A = criarMatrizInt(n, m);   // comeca tudo com 0
 
-    // Para cada cliente, passa pelos produtos que ele comprou e marca 1.
+    // Para cada cliente i, passa pelos produtos que ele comprou (posicao j da
+    // lista dele) e marca 1 na coluna daquele produto.
     for (i = 0; i < n; i++) {
-        for (int p : lc.compras[i])
-            A[i][p] = 1;
+        total = lista.prodClientes[i].size();
+        for (j = 0; j < total; j++) {
+            idProduto = lista.prodClientes[i][j];
+            A[i][idProduto] = 1;
+        }
     }
     return A;
 }
 
 // ---------------------------------------------------------------------------
-// calculaTransposta: troca linhas por colunas.
+// calcularTransposta: troca linhas por colunas.
 // A primeira linha de A vira a primeira COLUNA de T, e assim por diante.
 //   T[j][i] = A[i][j]          (e o pseudocodigo do enunciado)
 //
 // Se A tem "linhas" x "colunas", T tem "colunas" x "linhas".
 // ---------------------------------------------------------------------------
-vector<vector<int> > calculaTransposta(vector<vector<int> > &A) {
+vector<vector<int> > calcularTransposta(vector<vector<int> > &A) {
     int linhas = A.size();
     int colunas = 0;
     int i, j;
@@ -102,7 +108,7 @@ vector<vector<int> > calculaTransposta(vector<vector<int> > &A) {
         colunas = A[0].size();
 
     // T tem as dimensoes invertidas.
-    vector<vector<int> > T = criaMatrizInt(colunas, linhas);
+    vector<vector<int> > T = criarMatrizInt(colunas, linhas);
 
     for (i = 0; i < linhas; i++) {
         for (j = 0; j < colunas; j++)
@@ -112,7 +118,7 @@ vector<vector<int> > calculaTransposta(vector<vector<int> > &A) {
 }
 
 // ---------------------------------------------------------------------------
-// multiplicaMatrizes: multiplicacao de matrizes do jeito padrao (C = A x B).
+// multiplicarMatrizes: multiplicacao de matrizes do jeito padrao (C = A x B).
 // E o pseudocodigo do enunciado:
 //
 //   C[i][j] = soma de  A[i][k] * B[k][j]   para k de 0 ate n-1
@@ -121,7 +127,7 @@ vector<vector<int> > calculaTransposta(vector<vector<int> > &A) {
 // o resultado C tem m linhas e p colunas. Sao 3 lacos um dentro do outro:
 // i escolhe a linha, j escolhe a coluna e k percorre a soma.
 // ---------------------------------------------------------------------------
-vector<vector<int> > multiplicaMatrizes(vector<vector<int> > &A, vector<vector<int> > &B) {
+vector<vector<int> > multiplicarMatrizes(vector<vector<int> > &A, vector<vector<int> > &B) {
     int m = A.size();   // linhas de A
     int n = B.size();   // colunas de A = linhas de B
     int p = 0;          // colunas de B
@@ -130,7 +136,7 @@ vector<vector<int> > multiplicaMatrizes(vector<vector<int> > &A, vector<vector<i
     if (n > 0)
         p = B[0].size();
 
-    vector<vector<int> > C = criaMatrizInt(m, p);
+    vector<vector<int> > C = criarMatrizInt(m, p);
 
     for (i = 0; i < m; i++) {
         for (j = 0; j < p; j++) {
@@ -144,7 +150,7 @@ vector<vector<int> > multiplicaMatrizes(vector<vector<int> > &A, vector<vector<i
 }
 
 // ---------------------------------------------------------------------------
-// calculaSimilaridade: junta tudo e devolve a matriz de similaridade S.
+// calcularSimilaridade: junta tudo e devolve a matriz de similaridade S.
 //
 //   1) A = matriz de compras
 //   2) T = transposta de A
@@ -158,17 +164,17 @@ vector<vector<int> > multiplicaMatrizes(vector<vector<int> > &A, vector<vector<i
 // de s(j,i). Isso e desejado (explicado no enunciado): evita que quem
 // compra MUITO pareca parecido com todo mundo.
 // ---------------------------------------------------------------------------
-vector<vector<double> > calculaSimilaridade(ListaCompras &lc) {
-    int n = lc.clientes.size();
+vector<vector<double> > calcularSimilaridade(ListaCompras &lista) {
+    int n = lista.clientes.size();
     int i, j, totalI;
 
-    vector<vector<int> > A = criaMatrizCompras(lc);
-    vector<vector<int> > T = calculaTransposta(A);
-    vector<vector<int> > I = multiplicaMatrizes(A, T);
-    vector<vector<double> > S = criaMatrizDouble(n, n);   // comeca tudo 1.0
+    vector<vector<int> > A = criarMatrizCompras(lista);
+    vector<vector<int> > T = calcularTransposta(A);
+    vector<vector<int> > I = multiplicarMatrizes(A, T);
+    vector<vector<double> > S = criarMatrizDouble(n, n);   // comeca tudo 1.0
 
     for (i = 0; i < n; i++) {
-        totalI = lc.compras[i].size();   // |Pi| = produtos do cliente i
+        totalI = lista.prodClientes[i].size();   // |Pi| = produtos do cliente i
 
         // Se o cliente nao comprou nada, nao da para dividir por 0.
         // Ele fica com tudo 1 (nao e parecido com ninguem).

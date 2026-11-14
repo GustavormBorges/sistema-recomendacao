@@ -11,13 +11,15 @@
 //     menor fica a nota.
 //   - Nota MENOR = produto MELHOR. Ordenamos do menor para o maior e pegamos
 //     os k primeiros.
+//
+// Este arquivo NAO tem main: o main fica em arquivo separado (main_recomendacao.cpp).
 // ===========================================================================
 
 #include <algorithm>   // sort
 #include "Recomendacao.h"
 
 // ---------------------------------------------------------------------------
-// comparaRanking: funcao que ensina o sort a ordenar os ItemRanking.
+// compararRanking: funcao que ensina o sort a ordenar os ItemRanking.
 // E igual a "ordenarPorPreco" do exemplo do professor: devolve true se o
 // item "a" deve vir ANTES do item "b".
 //
@@ -26,7 +28,7 @@
 // Isso so serve para o resultado ser sempre o mesmo (sem esse desempate, o
 // sort poderia embaralhar produtos com a mesma nota).
 // ---------------------------------------------------------------------------
-static bool comparaRanking(const ItemRanking &a, const ItemRanking &b) {
+static bool compararRanking(const ItemRanking &a, const ItemRanking &b) {
     if (a.valor != b.valor)
         return a.valor < b.valor;
 
@@ -34,19 +36,19 @@ static bool comparaRanking(const ItemRanking &a, const ItemRanking &b) {
 }
 
 // ---------------------------------------------------------------------------
-// recomenda: devolve os (ate) k melhores produtos para o cliente.
+// recomendar: devolve os (ate) k melhores produtos para o cliente.
 //
 // Parametros:
-//   lc      - o historico de compras (modulo ListaCompras)
+//   lista   - o historico de compras (modulo ListaCompras)
 //   S       - a matriz de similaridade (modulo Similaridade)
 //   cliente - indice do cliente que vai receber a recomendacao
 //   k       - quantos produtos recomendar
 // ---------------------------------------------------------------------------
-vector<ItemRanking> recomenda(ListaCompras &lc, vector<vector<double> > &S,
-                              int cliente, int k) {
-    int n = lc.clientes.size();   // numero de clientes
-    int m = lc.produtos.size();   // numero de produtos
-    int v, p, i, escolhidos;
+vector<ItemRanking> recomendar(ListaCompras &lista, vector<vector<double> > &S,
+                               int cliente, int k) {
+    int n = lista.clientes.size();   // numero de clientes
+    int m = lista.produtos.size();   // numero de produtos
+    int v, j, p, i, total, idProduto, escolhidos;
     vector<int> jaComprou;           // jaComprou[p] = 1 se o cliente ja comprou o produto p
     vector<ItemRanking> R;           // o vetor de ranqueamento (uma nota por produto)
     vector<ItemRanking> resultado;   // os k escolhidos, que a funcao devolve
@@ -57,8 +59,11 @@ vector<ItemRanking> recomenda(ListaCompras &lc, vector<vector<double> > &S,
         jaComprou.push_back(0);
 
     // ...e depois coloca 1 nos produtos da lista de compras dele.
-    for (int x : lc.compras[cliente])
-        jaComprou[x] = 1;
+    total = lista.prodClientes[cliente].size();
+    for (j = 0; j < total; j++) {
+        idProduto = lista.prodClientes[cliente][j];
+        jaComprou[idProduto] = 1;
+    }
 
     // PASSO 2 do enunciado: cria o vetor R com nota inicial 1 para todos os
     // produtos. Cada posicao guarda qual e o produto e qual a nota dele.
@@ -77,18 +82,21 @@ vector<ItemRanking> recomenda(ListaCompras &lc, vector<vector<double> > &S,
     for (v = 0; v < n; v++) {
         if (v != cliente && S[cliente][v] < 1.0) {
 
-            // Para cada produto x que o vizinho v comprou...
-            for (int x : lc.compras[v]) {
+            // Para cada produto que o vizinho v comprou...
+            total = lista.prodClientes[v].size();
+            for (j = 0; j < total; j++) {
+                idProduto = lista.prodClientes[v][j];
+
                 // ...e que o cliente ainda NAO comprou, multiplica a nota por S.
-                if (jaComprou[x] == 0)
-                    R[x].valor = R[x].valor * S[cliente][v];
+                if (jaComprou[idProduto] == 0)
+                    R[idProduto].valor = R[idProduto].valor * S[cliente][v];
             }
         }
     }
 
     // PASSO 4 do enunciado: ordena R do menor para o maior valor, usando a
     // funcao de comparacao de cima. sort(inicio, fim, funcao).
-    sort(R.begin(), R.end(), comparaRanking);
+    sort(R.begin(), R.end(), compararRanking);
 
     // Pega os k primeiros. Paramos tambem quando a nota chega em 1: esses
     // produtos nunca foram alterados (nenhum vizinho comprou) ou ja eram do

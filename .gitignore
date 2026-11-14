@@ -1,6 +1,6 @@
 # Executáveis gerados na compilação
 *.exe
 *.o
-teste_lista
-teste_similaridade
-teste_recomendacao
+lista
+similaridade
+recomendacao

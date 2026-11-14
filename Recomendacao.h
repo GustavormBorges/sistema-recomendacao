@@ -15,7 +15,7 @@ struct ItemRanking {
 
 // Devolve os (ate) k produtos mais bem ranqueados para o cliente, do melhor
 // para o pior. Pode devolver menos de k se nao houver produtos suficientes.
-vector<ItemRanking> recomenda(ListaCompras &lc, vector<vector<double> > &S,
-                              int cliente, int k);
+vector<ItemRanking> recomendar(ListaCompras &lista, vector<vector<double> > &S,
+                               int cliente, int k);
 
 #endif

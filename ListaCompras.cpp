@@ -7,12 +7,14 @@
 // Cada linha do CSV e uma compra:  DATA_COMPRA,COD_CLIENTE,COD_PRODUTO,NOME_PRODUTO
 // Exemplo:  20200515,05090301,025728,SMARTPHONE SAMSUNG GAL J4 CORE 16GB PRETO
 //
+// Este arquivo NAO tem main: o main fica em arquivo separado (main_lista.cpp).
+//
 // Ordem do arquivo:
-//   1) tiraEspacos  - funcao auxiliar
+//   1) tirarEspacos - funcao auxiliar
 //   2) contem       - funcao auxiliar
 //   3) lerLinha     - le UMA linha do CSV
-//   4) carregaCompras - usa as funcoes acima para montar a ListaCompras
-//   5) buscaCliente e imprimeCompras - usadas pelos testadores
+//   4) lerDados     - usa as funcoes acima para montar a ListaCompras
+//   5) buscarCliente e imprimirCompras - usadas pelo main
 // ===========================================================================
 
 #include <stdio.h>    // FILE, fopen, fgets, sscanf, fclose
@@ -21,7 +23,7 @@
 #include "ListaCompras.h"
 
 // ---------------------------------------------------------------------------
-// tiraEspacos: apaga os espacos que sobram no FINAL de um texto.
+// tirarEspacos: apaga os espacos que sobram no FINAL de um texto.
 //
 // Por que? No CSV os nomes vem "preenchidos" com espacos, assim:
 //     "TABLET NB316 M7S 16GB QUAD CORE PRETO        "
@@ -33,7 +35,7 @@
 //
 // "static" significa que a funcao so existe dentro deste arquivo.
 // ---------------------------------------------------------------------------
-static void tiraEspacos(char *texto) {
+static void tirarEspacos(char *texto) {
     int tamanho = strlen(texto);   // quantos caracteres o texto tem
 
     // texto[tamanho - 1] e o ultimo caractere.
@@ -44,19 +46,18 @@ static void tiraEspacos(char *texto) {
 }
 
 // ---------------------------------------------------------------------------
-// contem: diz se um produto ja esta dentro de uma lista de produtos.
+// contem: diz se um produto ja esta dentro da lista de produtos de um cliente.
 // Devolve 1 se esta e 0 se nao esta (mesmo estilo de "flag" do jogo da velha).
 //
-// "list<int> &lista": o & quer dizer que a funcao usa a lista original, sem
-// fazer uma copia (copiar uma lista grande seria desperdicio).
-//
-// O "for (int x : lista)" e o mesmo que aparece no exemplo da aula sobre
-// list: percorre todos os elementos da lista, um de cada vez, e x vale o
-// elemento da vez. (Lista nao tem indice, entao nao da para usar lista[i].)
+// "vector<int> &produtosCliente": o & quer dizer que a funcao usa o vetor
+// original, sem fazer uma copia (copiar um vetor grande seria desperdicio).
 // ---------------------------------------------------------------------------
-static int contem(list<int> &lista, int produto) {
-    for (int x : lista) {
-        if (x == produto)
+static int contem(vector<int> &produtosCliente, int produto) {
+    int j;
+    int total = produtosCliente.size();
+
+    for (j = 0; j < total; j++) {
+        if (produtosCliente[j] == produto)
             return 1;   // achou: ja esta na lista
     }
     return 0;           // olhou todos e nao achou
@@ -119,8 +120,8 @@ static int lerLinha(FILE *arquivo, char *cliente, char *produto, char *nome) {
         }
 
         if (ok == 1) {
-            tiraEspacos(nome);   // limpa os espacos do final do nome
-            return 1;            // leu uma linha valida: pronto
+            tirarEspacos(nome);   // limpa os espacos do final do nome
+            return 1;             // leu uma linha valida: pronto
         }
         // Se chegou aqui, a linha estava vazia ou estragada.
         // O while volta e tenta a proxima linha.
@@ -130,32 +131,33 @@ static int lerLinha(FILE *arquivo, char *cliente, char *produto, char *nome) {
 }
 
 // ---------------------------------------------------------------------------
-// carregaCompras: le o arquivo CSV e preenche a ListaCompras.
+// lerDados: le o arquivo CSV e preenche a ListaCompras.
 //
-// Funciona em DUAS passagens pelo arquivo (veja a Figura 4 do enunciado):
+// O enunciado manda fazer em DUAS fases (Figura 4):
 //
-//  1a passagem: descobre quem sao os clientes e os produtos.
-//     - clientes[i]       : codigo do cliente numero i
-//     - indiceCliente     : dado um codigo, devolve o numero (indice) do cliente
-//     - produtos[p]       : nome do produto numero p
-//     - indiceProduto     : dado um codigo, devolve o numero do produto
+//  1a passagem pelo arquivo: descobre quem sao os clientes e os produtos.
+//     - clientes[i]    : codigo do cliente numero i
+//     - mapCliente     : dado um codigo, devolve o numero (indice) do cliente
+//     - produtos[p]    : nome do produto numero p
+//     - mapProduto     : dado um codigo, devolve o numero do produto
+//     - prodClientes   : cada vez que aparece um cliente NOVO, ja criamos um
+//                        vetor vazio para ele (ainda sem produtos)
 //
-//  2a passagem: monta compras[i], a lista de produtos de cada cliente.
-//     So da para criar "compras" depois da 1a passagem, porque precisamos
-//     saber ANTES quantos clientes existem.
+//  2a passagem pelo arquivo: preenche prodClientes[i], os produtos que cada
+//     cliente comprou.
 //
 // Devolve 1 se deu certo e 0 se nao conseguiu abrir o arquivo.
 // ---------------------------------------------------------------------------
-int carregaCompras(char *nomeArquivo, ListaCompras &lc) {
+int lerDados(char *caminhoArquivo, ListaCompras &lista) {
     FILE *arquivo;
     char cliente[20];     // codigo do cliente da linha lida
     char produto[20];     // codigo do produto da linha lida
     char nome[200];       // nome do produto da linha lida
     char cabecalho[300];  // so para jogar fora a primeira linha do CSV
-    int i, c, p;
+    int c, p;
 
     // Abre o arquivo para leitura. Se der erro, fopen devolve NULL.
-    arquivo = fopen(nomeArquivo, "r");
+    arquivo = fopen(caminhoArquivo, "r");
     if (arquivo == NULL)
         return 0;
 
@@ -171,33 +173,30 @@ int carregaCompras(char *nomeArquivo, ListaCompras &lc) {
         // O cliente ainda nao esta no mapa? Entao e a primeira vez que ele aparece.
         // (find devolve end() quando a chave NAO existe - igual no exemplo
         // do professor sobre map.)
-        if (lc.indiceCliente.find(cliente) == lc.indiceCliente.end()) {
+        if (lista.mapCliente.find(cliente) == lista.mapCliente.end()) {
             // O indice do novo cliente e a posicao dele no vetor, ou seja,
             // o tamanho atual do vetor (se ja tem 5 clientes, o novo e o 5).
-            lc.indiceCliente[cliente] = lc.clientes.size();
-            lc.clientes.push_back(cliente);   // coloca no final do vetor
+            lista.mapCliente[cliente] = lista.clientes.size();
+            lista.clientes.push_back(cliente);   // coloca no final do vetor
+
+            // Cria o vetor de produtos desse cliente, ainda vazio.
+            // {} quer dizer "vetor vazio".
+            lista.prodClientes.push_back({});
         }
 
         // Mesma ideia para o produto. Guardamos o NOME no vetor de produtos,
         // e o mapa liga o codigo original ao indice.
-        if (lc.indiceProduto.find(produto) == lc.indiceProduto.end()) {
-            lc.indiceProduto[produto] = lc.produtos.size();
-            lc.produtos.push_back(nome);
+        if (lista.mapProduto.find(produto) == lista.mapProduto.end()) {
+            lista.mapProduto[produto] = lista.produtos.size();
+            lista.produtos.push_back(nome);
         }
     }
     fclose(arquivo);   // terminou a 1a passagem
 
-    // Agora que sabemos quantos clientes existem, criamos uma lista VAZIA de
-    // compras para cada um. Assim compras[i] ja existe quando formos usar.
-    for (i = 0; i < (int)lc.clientes.size(); i++) {
-        list<int> vazia;
-        lc.compras.push_back(vazia);
-    }
-
     // ---------------- 2a PASSAGEM ----------------
 
     // Abrimos o arquivo de novo para ler tudo desde o comeco.
-    arquivo = fopen(nomeArquivo, "r");
+    arquivo = fopen(caminhoArquivo, "r");
     if (arquivo == NULL)
         return 0;
 
@@ -205,14 +204,14 @@ int carregaCompras(char *nomeArquivo, ListaCompras &lc) {
 
     while (lerLinha(arquivo, cliente, produto, nome) == 1) {
         // Descobre os indices a partir dos codigos originais usando os mapas.
-        c = lc.indiceCliente[cliente];
-        p = lc.indiceProduto[produto];
+        c = lista.mapCliente[cliente];
+        p = lista.mapProduto[produto];
 
         // Problema dos dados: o mesmo cliente pode ter comprado o mesmo produto
         // mais de uma vez. Na matriz de compras so importa se comprou ou nao,
         // entao so adicionamos o produto se ele ainda nao estiver na lista.
-        if (contem(lc.compras[c], p) == 0)
-            lc.compras[c].push_back(p);
+        if (contem(lista.prodClientes[c], p) == 0)
+            lista.prodClientes[c].push_back(p);
     }
     fclose(arquivo);
 
@@ -220,28 +219,32 @@ int carregaCompras(char *nomeArquivo, ListaCompras &lc) {
 }
 
 // ---------------------------------------------------------------------------
-// buscaCliente: dado o codigo ORIGINAL de um cliente, devolve o indice dele.
+// buscarCliente: dado o codigo ORIGINAL de um cliente, devolve o indice dele.
 // Se o codigo nao existe, devolve -1 (um valor que nunca e indice valido).
 // Mesmo padrao do exemplo do professor: find(...) != end() quer dizer "achou".
 // ---------------------------------------------------------------------------
-int buscaCliente(ListaCompras &lc, string codigo) {
-    if (lc.indiceCliente.find(codigo) != lc.indiceCliente.end())
-        return lc.indiceCliente[codigo];
+int buscarCliente(ListaCompras &lista, string codigo) {
+    if (lista.mapCliente.find(codigo) != lista.mapCliente.end())
+        return lista.mapCliente[codigo];
 
     return -1;
 }
 
 // ---------------------------------------------------------------------------
-// imprimeCompras: mostra na tela o cliente i e os nomes dos produtos que ele
-// comprou. Usada pelos programas testadores.
+// imprimirCompras: mostra na tela o cliente i e os nomes dos produtos que ele
+// comprou. Usada pelos programas main.
 // ---------------------------------------------------------------------------
-void imprimeCompras(ListaCompras &lc, int i) {
-    // lc.compras[i].size() = quantos produtos tem na lista do cliente i
-    cout << "Cliente " << i << " (codigo " << lc.clientes[i] << ") comprou "
-         << lc.compras[i].size() << " produto(s):" << endl;
+void imprimirCompras(ListaCompras &lista, int i) {
+    int j, p;
+    int total = lista.prodClientes[i].size();   // quantos produtos o cliente i comprou
 
-    // p vale, a cada volta, o indice de um produto comprado.
-    // lc.produtos[p] e o nome desse produto.
-    for (int p : lc.compras[i])
-        cout << "   - " << lc.produtos[p] << endl;
+    cout << "Cliente " << i << " (codigo " << lista.clientes[i] << ") comprou "
+         << total << " produto(s):" << endl;
+
+    // j percorre as posicoes da lista do cliente; p e o indice do produto.
+    // lista.produtos[p] e o nome desse produto.
+    for (j = 0; j < total; j++) {
+        p = lista.prodClientes[i][j];
+        cout << "   - " << lista.produtos[p] << endl;
+    }
 }
