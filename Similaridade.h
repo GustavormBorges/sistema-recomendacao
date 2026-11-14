@@ -5,22 +5,20 @@
 #include "ListaCompras.h"
 using namespace std;
 
-typedef vector<vector<int> > MatrizInt;
-typedef vector<vector<double> > MatrizDouble;
-
 // Matriz de compras A (n clientes x m produtos): A[i][p] = 1 se o cliente i comprou o produto p.
-MatrizInt criarMatrizCompras(const ListaCompras &lc);
+vector<vector<int> > criaMatrizCompras(ListaCompras &lc);
 
 // Matriz transposta: T[j][i] = A[i][j].
-MatrizInt transposta(const MatrizInt &A);
+vector<vector<int> > calculaTransposta(vector<vector<int> > &A);
 
-// Multiplicação de matrizes padrão (3 laços): C = A x B.
-MatrizInt multiplicar(const MatrizInt &A, const MatrizInt &B);
+// Multiplicacao de matrizes padrao (3 lacos): C = A x B.
+vector<vector<int> > multiplicaMatrizes(vector<vector<int> > &A, vector<vector<int> > &B);
 
-// Matriz de similaridade S (n x n):  S[i][j] = 1 - |Pi interseção Pj| / |Pi|
-// Quanto MENOR o valor, MAIS parecidos são os clientes i e j. Valor 1 = nada em comum.
-// Atenção: a matriz é densa, então usa muita memória (cerca de 12 bytes x n x n).
-// Para n = 3000 clientes são ~100 MB.
-MatrizDouble calcularSimilaridade(const ListaCompras &lc);
+// Matriz de similaridade S (n x n):  S[i][j] = 1 - |Pi interseccao Pj| / |Pi|
+// Quanto MENOR o valor, MAIS parecidos sao os clientes i e j.
+// Valor 1 significa que nao compraram nada em comum.
+// Atencao: a matriz e densa e usa muita memoria (cerca de 12 bytes x n x n).
+// Para n = 3000 clientes sao uns 100 MB.
+vector<vector<double> > calculaSimilaridade(ListaCompras &lc);
 
 #endif

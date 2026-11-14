@@ -7,25 +7,25 @@
 #include <string>
 using namespace std;
 
-// Histórico de compras da loja.
-// Tudo é guardado com "índices internos" (0, 1, 2...) em vez dos códigos
-// originais, porque assim dá para acessar os vetores diretamente.
+// Historico de compras da loja.
+// Clientes e produtos sao guardados por "indice interno" (0, 1, 2...)
+// em vez do codigo original, para acessar os vetores direto pela posicao.
 struct ListaCompras {
-    vector<string> clientes;         // índice do cliente -> código original
-    map<string, int> indiceCliente;  // código original -> índice do cliente
-    vector<string> produtos;         // índice do produto -> nome do produto
-    map<string, int> indiceProduto;  // código original -> índice do produto
-    vector<list<int> > compras;      // compras[i] = índices dos produtos do cliente i
+    vector<string> clientes;         // indice -> codigo original do cliente
+    map<string, int> indiceCliente;  // codigo original do cliente -> indice
+    vector<string> produtos;         // indice -> nome do produto
+    map<string, int> indiceProduto;  // codigo original do produto -> indice
+    vector<list<int> > compras;      // compras[i] = produtos comprados pelo cliente i
 };
 
-// Lê o arquivo CSV e preenche a ListaCompras.
-// Devolve false se não conseguir abrir o arquivo.
-bool carregarCompras(const char *nomeArquivo, ListaCompras &lc);
+// Le o arquivo CSV e preenche a ListaCompras.
+// Devolve 1 se deu certo e 0 se nao conseguiu abrir o arquivo.
+int carregaCompras(char *nomeArquivo, ListaCompras &lc);
 
-// Devolve o índice interno do cliente com esse código, ou -1 se não existir.
-int buscarCliente(const ListaCompras &lc, const string &codigo);
+// Devolve o indice do cliente com esse codigo, ou -1 se ele nao existir.
+int buscaCliente(ListaCompras &lc, string codigo);
 
-// Mostra o cliente e os nomes dos produtos que ele comprou.
-void imprimirCompras(const ListaCompras &lc, int i);
+// Mostra o cliente i e o nome dos produtos que ele comprou.
+void imprimeCompras(ListaCompras &lc, int i);
 
 #endif
