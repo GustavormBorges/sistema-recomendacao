@@ -1,6 +1,4 @@
-# Executáveis gerados na compilação
+# Executaveis gerados na compilacao
 *.exe
 *.o
-lista
-similaridade
-recomendacao
+sistema

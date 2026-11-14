@@ -21,4 +21,10 @@ vector<vector<int> > multiplicarMatrizes(vector<vector<int> > &A, vector<vector<
 // Para n = 3000 clientes sao uns 100 MB.
 vector<vector<double> > calcularSimilaridade(ListaCompras &lista);
 
+// Devolve a similaridade s(i, j) entre o cliente i e o cliente j (indices internos),
+// lida da matriz densa S. Quem usa o modulo chama esta funcao em vez de acessar
+// S[i][j] direto. O "Densa" no nome e porque a Atividade 5 vai ter uma versao
+// para a matriz esparsa (CSR).
+double similaridadeDensa(vector<vector<double> > &S, int i, int j);
+
 #endif

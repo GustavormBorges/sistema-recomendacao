@@ -7,7 +7,7 @@
 // Cada linha do CSV e uma compra:  DATA_COMPRA,COD_CLIENTE,COD_PRODUTO,NOME_PRODUTO
 // Exemplo:  20200515,05090301,025728,SMARTPHONE SAMSUNG GAL J4 CORE 16GB PRETO
 //
-// Este arquivo NAO tem main: o main fica em arquivo separado (main_lista.cpp).
+// Este arquivo NAO tem main: o main fica em arquivo separado (main.cpp).
 //
 // Ordem do arquivo:
 //   1) tirarEspacos - funcao auxiliar
@@ -49,15 +49,16 @@ static void tirarEspacos(char *texto) {
 // contem: diz se um produto ja esta dentro da lista de produtos de um cliente.
 // Devolve 1 se esta e 0 se nao esta (mesmo estilo de "flag" do jogo da velha).
 //
-// "vector<int> &produtosCliente": o & quer dizer que a funcao usa o vetor
-// original, sem fazer uma copia (copiar um vetor grande seria desperdicio).
+// "list<int> &produtosCliente": o & quer dizer que a funcao usa a lista
+// original, sem fazer uma copia (copiar uma lista grande seria desperdicio).
+//
+// Uma list NAO tem indice (nao existe lista[2]). Por isso percorremos com
+// "for (int p : lista)", o mesmo jeito do exemplo de list do enunciado: a cada
+// volta, "p" vale o proximo elemento da lista.
 // ---------------------------------------------------------------------------
-static int contem(vector<int> &produtosCliente, int produto) {
-    int j;
-    int total = produtosCliente.size();
-
-    for (j = 0; j < total; j++) {
-        if (produtosCliente[j] == produto)
+static int contem(list<int> &produtosCliente, int produto) {
+    for (int p : produtosCliente) {
+        if (p == produto)
             return 1;   // achou: ja esta na lista
     }
     return 0;           // olhou todos e nao achou
@@ -140,8 +141,8 @@ static int lerLinha(FILE *arquivo, char *cliente, char *produto, char *nome) {
 //     - mapCliente     : dado um codigo, devolve o numero (indice) do cliente
 //     - produtos[p]    : nome do produto numero p
 //     - mapProduto     : dado um codigo, devolve o numero do produto
-//     - prodClientes   : cada vez que aparece um cliente NOVO, ja criamos um
-//                        vetor vazio para ele (ainda sem produtos)
+//     - prodClientes   : cada vez que aparece um cliente NOVO, ja criamos uma
+//                        lista vazia para ele (ainda sem produtos)
 //
 //  2a passagem pelo arquivo: preenche prodClientes[i], os produtos que cada
 //     cliente comprou.
@@ -179,8 +180,8 @@ int lerDados(char *caminhoArquivo, ListaCompras &lista) {
             lista.mapCliente[cliente] = lista.clientes.size();
             lista.clientes.push_back(cliente);   // coloca no final do vetor
 
-            // Cria o vetor de produtos desse cliente, ainda vazio.
-            // {} quer dizer "vetor vazio".
+            // Cria a lista de produtos desse cliente, ainda vazia.
+            // {} quer dizer "lista vazia".
             lista.prodClientes.push_back({});
         }
 
@@ -232,19 +233,16 @@ int buscarCliente(ListaCompras &lista, string codigo) {
 
 // ---------------------------------------------------------------------------
 // imprimirCompras: mostra na tela o cliente i e os nomes dos produtos que ele
-// comprou. Usada pelos programas main.
+// comprou. Usada pelo main.
 // ---------------------------------------------------------------------------
 void imprimirCompras(ListaCompras &lista, int i) {
-    int j, p;
     int total = lista.prodClientes[i].size();   // quantos produtos o cliente i comprou
 
     cout << "Cliente " << i << " (codigo " << lista.clientes[i] << ") comprou "
          << total << " produto(s):" << endl;
 
-    // j percorre as posicoes da lista do cliente; p e o indice do produto.
+    // p percorre a lista do cliente: a cada volta vale o indice de um produto.
     // lista.produtos[p] e o nome desse produto.
-    for (j = 0; j < total; j++) {
-        p = lista.prodClientes[i][j];
+    for (int p : lista.prodClientes[i])
         cout << "   - " << lista.produtos[p] << endl;
-    }
 }

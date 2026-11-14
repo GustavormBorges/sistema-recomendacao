@@ -20,7 +20,7 @@
 //   I  = A x (A transposta)     I[i][j] = produtos em comum entre i e j
 //   S  = 1 - I[i][j] / |Pi|     matriz de similaridade
 //
-// Este arquivo NAO tem main: o main fica em arquivo separado (main_similaridade.cpp).
+// Este arquivo NAO tem main: o main fica em arquivo separado (main.cpp).
 // ===========================================================================
 
 #include "Similaridade.h"
@@ -76,17 +76,14 @@ static vector<vector<double> > criarMatrizDouble(int linhas, int colunas) {
 vector<vector<int> > criarMatrizCompras(ListaCompras &lista) {
     int n = lista.clientes.size();   // numero de clientes (linhas)
     int m = lista.produtos.size();   // numero de produtos (colunas)
-    int i, j, total, idProduto;
+    int i;
     vector<vector<int> > A = criarMatrizInt(n, m);   // comeca tudo com 0
 
-    // Para cada cliente i, passa pelos produtos que ele comprou (posicao j da
-    // lista dele) e marca 1 na coluna daquele produto.
+    // Para cada cliente i, passa pelos produtos da lista dele (idProduto vale
+    // um produto a cada volta) e marca 1 na coluna daquele produto.
     for (i = 0; i < n; i++) {
-        total = lista.prodClientes[i].size();
-        for (j = 0; j < total; j++) {
-            idProduto = lista.prodClientes[i][j];
+        for (int idProduto : lista.prodClientes[i])
             A[i][idProduto] = 1;
-        }
     }
     return A;
 }
@@ -188,4 +185,15 @@ vector<vector<double> > calcularSimilaridade(ListaCompras &lista) {
         }
     }
     return S;
+}
+
+// ---------------------------------------------------------------------------
+// similaridadeDensa: devolve s(i, j), o valor da similaridade entre o cliente i
+// e o cliente j. Os dois sao indices internos (nao os codigos originais).
+// Quanto MENOR o valor, MAIS parecidos eles sao.
+//
+// Atencao: s(i, j) e diferente de s(j, i), porque S nao e simetrica.
+// ---------------------------------------------------------------------------
+double similaridadeDensa(vector<vector<double> > &S, int i, int j) {
+    return S[i][j];
 }

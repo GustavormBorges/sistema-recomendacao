@@ -12,7 +12,7 @@
 //   - Nota MENOR = produto MELHOR. Ordenamos do menor para o maior e pegamos
 //     os k primeiros.
 //
-// Este arquivo NAO tem main: o main fica em arquivo separado (main_recomendacao.cpp).
+// Este arquivo NAO tem main: o main fica em arquivo separado (main.cpp).
 // ===========================================================================
 
 #include <algorithm>   // sort
@@ -48,7 +48,8 @@ vector<ItemRanking> recomendar(ListaCompras &lista, vector<vector<double> > &S,
                                int cliente, int k) {
     int n = lista.clientes.size();   // numero de clientes
     int m = lista.produtos.size();   // numero de produtos
-    int v, j, p, i, total, idProduto, escolhidos;
+    int v, p, i, escolhidos;
+    double s;                        // similaridade entre o cliente e o vizinho v
     vector<int> jaComprou;           // jaComprou[p] = 1 se o cliente ja comprou o produto p
     vector<ItemRanking> R;           // o vetor de ranqueamento (uma nota por produto)
     vector<ItemRanking> resultado;   // os k escolhidos, que a funcao devolve
@@ -59,11 +60,8 @@ vector<ItemRanking> recomendar(ListaCompras &lista, vector<vector<double> > &S,
         jaComprou.push_back(0);
 
     // ...e depois coloca 1 nos produtos da lista de compras dele.
-    total = lista.prodClientes[cliente].size();
-    for (j = 0; j < total; j++) {
-        idProduto = lista.prodClientes[cliente][j];
+    for (int idProduto : lista.prodClientes[cliente])
         jaComprou[idProduto] = 1;
-    }
 
     // PASSO 2 do enunciado: cria o vetor R com nota inicial 1 para todos os
     // produtos. Cada posicao guarda qual e o produto e qual a nota dele.
@@ -78,18 +76,18 @@ vector<ItemRanking> recomendar(ListaCompras &lista, vector<vector<double> > &S,
     // PASSOS 1 e 3 do enunciado:
     // Passa por todos os clientes v. Ele e vizinho se:
     //   - nao e o proprio cliente, e
-    //   - S[cliente][v] < 1 (tem pelo menos um produto em comum)
+    //   - similaridade(cliente, v) < 1 (tem pelo menos um produto em comum)
     for (v = 0; v < n; v++) {
-        if (v != cliente && S[cliente][v] < 1.0) {
+        s = similaridadeDensa(S, cliente, v);
 
-            // Para cada produto que o vizinho v comprou...
-            total = lista.prodClientes[v].size();
-            for (j = 0; j < total; j++) {
-                idProduto = lista.prodClientes[v][j];
+        if (v != cliente && s < 1.0) {
 
-                // ...e que o cliente ainda NAO comprou, multiplica a nota por S.
+            // Para cada produto da lista do vizinho v...
+            for (int idProduto : lista.prodClientes[v]) {
+
+                // ...que o cliente ainda NAO comprou, multiplica a nota por s.
                 if (jaComprou[idProduto] == 0)
-                    R[idProduto].valor = R[idProduto].valor * S[cliente][v];
+                    R[idProduto].valor = R[idProduto].valor * s;
             }
         }
     }

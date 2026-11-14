@@ -15,33 +15,34 @@ mais bem ranqueado o produto fica.
 | `ListaCompras.h/.cpp` | A1 | Lê o CSV e organiza clientes, produtos e a lista de compras de cada cliente |
 | `Similaridade.h/.cpp` | A2 | Monta a matriz de compras e calcula a matriz de similaridade entre clientes |
 | `Recomendacao.h/.cpp` | A3 | Gera os `k` produtos mais bem ranqueados para um cliente |
-| `main_lista.cpp` | A1 | Programa testador: mostra os produtos comprados por clientes |
-| `main_similaridade.cpp` | A2 | Programa testador: mostra o cliente mais similar a um cliente |
-| `main_recomendacao.cpp` | A3 | Programa testador: mostra as recomendações para clientes |
+| `main.cpp` | A1, A2 e A3 | Programa testador, com um modo para cada atividade |
 
-Os módulos não têm `main`: cada programa testador fica em um arquivo `main_*.cpp` separado.
+Os módulos não têm `main`: o programa testador fica em um arquivo separado, o `main.cpp`.
 
 ## Como compilar
 
 Precisa do `g++`. Na pasta do projeto:
 
 ```
-g++ -o lista main_lista.cpp ListaCompras.cpp
-g++ -o similaridade main_similaridade.cpp ListaCompras.cpp Similaridade.cpp
-g++ -o recomendacao main_recomendacao.cpp ListaCompras.cpp Similaridade.cpp Recomendacao.cpp
+g++ -o sistema main.cpp ListaCompras.cpp Similaridade.cpp Recomendacao.cpp
 ```
 
 ## Como executar
 
-Exemplos de uso com os dados do professor (pasta `dados/`):
+O programa recebe o arquivo CSV, o modo (`lista`, `similaridade` ou `recomendacao`) e,
+depois, os dados daquele modo. Exemplos com os dados do professor (pasta `dados/`):
 
 ```
-lista dados/dados_venda_cluster_0.csv 99EIP501 99PXGH01 48743701
-similaridade dados/dados_venda_cluster_0.csv 153
-recomendacao dados/dados_venda_cluster_0.csv 5 99EIP501 99PXGH01 48743701
+sistema dados/dados_venda_cluster_0.csv lista 99EIP501 99PXGH01 48743701
+sistema dados/dados_venda_cluster_0.csv similaridade 153
+sistema dados/dados_venda_cluster_0.csv recomendacao 5 99EIP501 99PXGH01 48743701
 ```
 
-No Windows, use `lista.exe` etc. (ou `.\lista`).
+- `lista`: A1. Depois do modo vêm os códigos originais dos clientes (sem códigos, usa os 3 primeiros).
+- `similaridade`: A2. Depois do modo vem o índice do cliente (sem índice, usa o 0).
+- `recomendacao`: A3. Depois do modo vem o `k` e os códigos originais dos clientes (sem códigos, usa os 3 primeiros).
+
+No Windows, use `.\sistema` no PowerShell.
 
 ## Observações sobre os dados
 
