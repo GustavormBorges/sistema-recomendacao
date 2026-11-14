@@ -1,4 +1,4 @@
-# Sistema de Recomendação
+﻿# Sistema de Recomendação
 
 Projeto da disciplina de Programação Estruturada: sistema de recomendação de produtos
 para clientes de uma loja de varejo, usando o **método da vizinhança** (filtragem
@@ -18,7 +18,6 @@ mais bem ranqueado o produto fica.
 | `teste_lista.cpp` | A1 | Testador: mostra os produtos comprados por clientes |
 | `teste_similaridade.cpp` | A2 | Testador: mostra o cliente mais similar a um cliente |
 | `teste_recomendacao.cpp` | A3 | Testador: mostra as recomendações para clientes |
-| `exemplo/exemplo_pequeno.csv` | | Exemplo pequeno (o da Figura 3 do enunciado) para conferir à mão |
 
 ## Como compilar
 
@@ -32,13 +31,7 @@ g++ -o teste_recomendacao teste_recomendacao.cpp ListaCompras.cpp Similaridade.c
 
 ## Como executar
 
-```
-teste_lista exemplo/exemplo_pequeno.csv JOAO MARIA FULANO
-teste_similaridade exemplo/exemplo_pequeno.csv 0
-teste_recomendacao exemplo/exemplo_pequeno.csv 3 JOAO CICLANO
-```
-
-Com os dados reais (pasta `dados/` do professor), por exemplo:
+Exemplos de uso com os dados do professor (pasta `dados/`):
 
 ```
 teste_lista dados/dados_venda_cluster_0.csv 99EIP501 99PXGH01 48743701
