@@ -1,25 +1,25 @@
 // ===========================================================================
 // MAIN do projeto (programa testador das Atividades 1, 2 e 3)
 //
-// Um unico programa, com tres modos. O modo e escolhido no terminal:
+// Um unico programa. A opcao digitada no terminal escolhe o que executar:
 //
-//     sistema <arquivo.csv> lista [cod_cliente ...]
+//     sistema <arquivo.csv> 1 [cod_cliente ...]
 //         Atividade 1: mostra os produtos comprados por alguns clientes,
 //         pelo CODIGO ORIGINAL (o que aparece no CSV).
 //         Sem codigos, usa os 3 primeiros clientes do arquivo.
 //
-//     sistema <arquivo.csv> similaridade [indice_cliente]
+//     sistema <arquivo.csv> 2 [indice_cliente]
 //         Atividade 2: mostra o cliente mais parecido com um cliente, que nao
 //         seja ele mesmo. O cliente e escolhido pelo INDICE interno (0, 1, 2...).
 //         Sem indice, usa o cliente 0.
 //
-//     sistema <arquivo.csv> recomendacao <k> [cod_cliente ...]
+//     sistema <arquivo.csv> 3 <k> [cod_cliente ...]
 //         Atividade 3: mostra os k produtos recomendados para alguns clientes,
 //         pelo CODIGO ORIGINAL. Sem codigos, usa os 3 primeiros clientes.
 //
 // argc = quantos itens foram digitados no terminal (contando o nome do programa)
 // argv = os itens digitados: argv[0] e o programa, argv[1] e o arquivo,
-//        argv[2] e o modo, e o resto depende do modo.
+//        argv[2] e a opcao, e o resto depende da opcao.
 // ===========================================================================
 
 #include <iostream>
@@ -33,6 +33,9 @@
 // ---------------------------------------------------------------------------
 static void testarLista(ListaCompras &lista, int argc, char *argv[]) {
     int i, a;
+
+    cout << lista.clientes.size() << " clientes e " << lista.produtos.size()
+         << " produtos carregados." << endl << endl;
 
     if (argc == 3) {
         // Sem codigos: mostra os 3 primeiros clientes (indices 0, 1 e 2).
@@ -69,8 +72,8 @@ static void testarSimilaridade(ListaCompras &lista, int argc, char *argv[]) {
         return;
     }
 
-    // Calcula a matriz de similaridade de todos os clientes.
-    vector<vector<double> > S = calcularSimilaridade(lista);
+    // Calcula a matriz de similaridade de todos os clientes (criada com malloc).
+    double **S = calcularSimilaridade(lista);
 
     // Procura o cliente j com MENOR similaridade com i (o mais parecido).
     // maisSimilar guarda o melhor encontrado ate agora; -1 = ainda nao achou.
@@ -92,15 +95,17 @@ static void testarSimilaridade(ListaCompras &lista, int argc, char *argv[]) {
         cout << "Cliente mais similar (s = " << similaridadeDensa(S, i, maisSimilar) << "):" << endl;
         imprimirCompras(lista, maisSimilar);
     }
+
+    liberarMatrizDouble(S, n);   // tudo que veio de malloc precisa de free
 }
 
 // ---------------------------------------------------------------------------
 // ATIVIDADE 3 (auxiliar): mostra as compras do cliente i e os k produtos
 // recomendados para ele.
 // ---------------------------------------------------------------------------
-static void mostrarRecomendacao(ListaCompras &lista, vector<vector<double> > &S, int i, int k) {
+static void mostrarRecomendacao(ListaCompras &lista, double **S, int i, int k) {
     int r;
-    vector<ItemRanking> recomendados;
+    vector<item> recomendados;
 
     imprimirCompras(lista, i);
 
@@ -113,9 +118,9 @@ static void mostrarRecomendacao(ListaCompras &lista, vector<vector<double> > &S,
         cout << "Produtos recomendados:" << endl;
         for (r = 0; r < (int)recomendados.size(); r++) {
             // recomendados[r].produto e o indice do produto: pegamos o nome
-            // dele no vetor de produtos. "valor" e a nota (menor = melhor).
+            // dele no vetor de produtos. "score" e a nota (menor = melhor).
             cout << "   " << r + 1 << ". " << lista.produtos[recomendados[r].produto]
-                 << "  (valor " << recomendados[r].valor << ")" << endl;
+                 << "  (valor " << recomendados[r].score << ")" << endl;
         }
     }
     cout << endl;
@@ -126,20 +131,21 @@ static void mostrarRecomendacao(ListaCompras &lista, vector<vector<double> > &S,
 // (codigos a partir de argv[4]).
 // ---------------------------------------------------------------------------
 static void testarRecomendacao(ListaCompras &lista, int argc, char *argv[]) {
+    int n = lista.clientes.size();
     int k, i, a;
 
     if (argc < 4) {
-        cout << "Falta o k. Uso: " << argv[0] << " <arquivo.csv> recomendacao <k> [cod_cliente ...]" << endl;
+        cout << "Falta o k. Uso: " << argv[0] << " <arquivo.csv> 3 <k> [cod_cliente ...]" << endl;
         return;
     }
 
     k = atoi(argv[3]);   // texto "5" -> numero 5
 
-    vector<vector<double> > S = calcularSimilaridade(lista);
+    double **S = calcularSimilaridade(lista);
 
     if (argc == 4) {
         // Sem codigos: recomenda para os 3 primeiros clientes.
-        for (i = 0; i < 3 && i < (int)lista.clientes.size(); i++)
+        for (i = 0; i < 3 && i < n; i++)
             mostrarRecomendacao(lista, S, i, k);
     } else {
         // Com codigos: para cada um, descobre o indice e recomenda.
@@ -152,21 +158,23 @@ static void testarRecomendacao(ListaCompras &lista, int argc, char *argv[]) {
                 mostrarRecomendacao(lista, S, i, k);
         }
     }
+
+    liberarMatrizDouble(S, n);
 }
 
 // ---------------------------------------------------------------------------
-// main: le o arquivo e chama o modo escolhido.
+// main: le o arquivo e usa um switch para executar a opcao escolhida.
 // ---------------------------------------------------------------------------
 int main(int argc, char *argv[]) {
     ListaCompras lista;
-    string modo;
+    int opcao;
 
-    // Precisa de pelo menos o arquivo e o modo.
+    // Precisa de pelo menos o arquivo e a opcao.
     if (argc < 3) {
         cout << "Uso:" << endl;
-        cout << "  " << argv[0] << " <arquivo.csv> lista [cod_cliente ...]" << endl;
-        cout << "  " << argv[0] << " <arquivo.csv> similaridade [indice_cliente]" << endl;
-        cout << "  " << argv[0] << " <arquivo.csv> recomendacao <k> [cod_cliente ...]" << endl;
+        cout << "  " << argv[0] << " <arquivo.csv> 1 [cod_cliente ...]" << endl;
+        cout << "  " << argv[0] << " <arquivo.csv> 2 [indice_cliente]" << endl;
+        cout << "  " << argv[0] << " <arquivo.csv> 3 <k> [cod_cliente ...]" << endl;
         return 1;
     }
 
@@ -176,20 +184,26 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    modo = argv[2];
+    opcao = atoi(argv[2]);   // texto "2" -> numero 2
 
-    if (modo == "lista") {
-        cout << lista.clientes.size() << " clientes e " << lista.produtos.size()
-             << " produtos carregados." << endl << endl;
-        testarLista(lista, argc, argv);
-    } else if (modo == "similaridade") {
-        testarSimilaridade(lista, argc, argv);
-    } else if (modo == "recomendacao") {
-        testarRecomendacao(lista, argc, argv);
-    } else {
-        cout << "Modo desconhecido: " << modo << " (use lista, similaridade ou recomendacao)" << endl;
-        return 1;
+    // O switch compara "opcao" com cada case e executa o que combina.
+    // O break encerra o case (sem ele, o programa "cairia" no case seguinte).
+    switch (opcao) {
+        case 1:
+            testarLista(lista, argc, argv);
+            break;
+        case 2:
+            testarSimilaridade(lista, argc, argv);
+            break;
+        case 3:
+            testarRecomendacao(lista, argc, argv);
+            break;
+        default:
+            cout << "Opcao invalida: " << argv[2] << " (use 1, 2 ou 3)" << endl;
+            liberarMatrizCompras(lista);
+            return 1;
     }
 
+    liberarMatrizCompras(lista);   // libera a matriz de compras (se foi criada)
     return 0;
 }

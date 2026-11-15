@@ -20,27 +20,45 @@
 //   I  = A x (A transposta)     I[i][j] = produtos em comum entre i e j
 //   S  = 1 - I[i][j] / |Pi|     matriz de similaridade
 //
+// As matrizes sao criadas com malloc (estilo C) e liberadas com free.
+//
 // Este arquivo NAO tem main: o main fica em arquivo separado (main.cpp).
 // ===========================================================================
 
+#include <stdio.h>
+#include <stdlib.h>   // malloc, free, exit
 #include "Similaridade.h"
 
 // ---------------------------------------------------------------------------
 // criarMatrizInt: cria uma matriz de inteiros (linhas x colunas) cheia de 0.
 //
-// Uma matriz aqui e um "vetor de vetores": cada linha e um vector<int>, e a
-// matriz e um vector dessas linhas. Montamos com push_back, o mesmo que o
-// professor mostra nos exemplos de vector. Depois acessamos matriz[i][j].
+// Com malloc, uma matriz e feita em duas etapas:
+//   1) um vetor com "linhas" ponteiros (cada ponteiro vai apontar para uma linha);
+//   2) para cada linha, um vetor com "colunas" inteiros.
+// Depois acessamos matriz[i][j] normalmente.
+//
+// malloc(n * sizeof(int)) pede ao sistema espaco para n inteiros.
+// Se nao houver memoria suficiente, malloc devolve NULL: nesse caso avisamos
+// e encerramos o programa.
 // ---------------------------------------------------------------------------
-static vector<vector<int> > criarMatrizInt(int linhas, int colunas) {
+int **criarMatrizInt(int linhas, int colunas) {
     int i, j;
-    vector<vector<int> > matriz;
+    int **matriz;
+
+    matriz = (int **) malloc(linhas * sizeof(int *));   // o vetor de ponteiros
+    if (matriz == NULL) {
+        printf("Memoria insuficiente para a matriz.\n");
+        exit(1);
+    }
 
     for (i = 0; i < linhas; i++) {
-        vector<int> linha;              // uma linha nova, vazia
+        matriz[i] = (int *) malloc(colunas * sizeof(int));   // a linha i
+        if (matriz[i] == NULL) {
+            printf("Memoria insuficiente para a matriz.\n");
+            exit(1);
+        }
         for (j = 0; j < colunas; j++)
-            linha.push_back(0);         // coloca "colunas" zeros nela
-        matriz.push_back(linha);        // coloca a linha pronta na matriz
+            matriz[i][j] = 0;   // malloc nao zera: preenchemos nos mesmos
     }
     return matriz;
 }
@@ -50,21 +68,52 @@ static vector<vector<int> > criarMatrizInt(int linhas, int colunas) {
 // e cheia de 1.0. Usada para a matriz de similaridade, onde 1 quer dizer
 // "nada parecido" (e o valor padrao ate calcularmos o resto).
 // ---------------------------------------------------------------------------
-static vector<vector<double> > criarMatrizDouble(int linhas, int colunas) {
+double **criarMatrizDouble(int linhas, int colunas) {
     int i, j;
-    vector<vector<double> > matriz;
+    double **matriz;
+
+    matriz = (double **) malloc(linhas * sizeof(double *));
+    if (matriz == NULL) {
+        printf("Memoria insuficiente para a matriz.\n");
+        exit(1);
+    }
 
     for (i = 0; i < linhas; i++) {
-        vector<double> linha;
+        matriz[i] = (double *) malloc(colunas * sizeof(double));
+        if (matriz[i] == NULL) {
+            printf("Memoria insuficiente para a matriz.\n");
+            exit(1);
+        }
         for (j = 0; j < colunas; j++)
-            linha.push_back(1.0);
-        matriz.push_back(linha);
+            matriz[i][j] = 1.0;
     }
     return matriz;
 }
 
 // ---------------------------------------------------------------------------
-// criarMatrizCompras: monta a matriz A (n clientes x m produtos).
+// liberarMatrizInt / liberarMatrizDouble: devolvem a memoria ao sistema.
+// Tudo que foi criado com malloc precisa de um free. Liberamos na ordem
+// inversa: primeiro cada linha, depois o vetor de ponteiros.
+// ---------------------------------------------------------------------------
+void liberarMatrizInt(int **M, int linhas) {
+    int i;
+
+    for (i = 0; i < linhas; i++)
+        free(M[i]);
+    free(M);
+}
+
+void liberarMatrizDouble(double **M, int linhas) {
+    int i;
+
+    for (i = 0; i < linhas; i++)
+        free(M[i]);
+    free(M);
+}
+
+// ---------------------------------------------------------------------------
+// criarMatrizCompras: monta a matriz A (n clientes x m produtos) e guarda em
+// lista.matrizCompras.
 //   A[i][p] = 1 se o cliente i comprou o produto p
 //   A[i][p] = 0 se nao comprou
 //
@@ -73,19 +122,31 @@ static vector<vector<double> > criarMatrizDouble(int linhas, int colunas) {
 //     Joao     0  1  1  0  0  1
 //     Fulano   1  0  1  0  0  0
 // ---------------------------------------------------------------------------
-vector<vector<int> > criarMatrizCompras(ListaCompras &lista) {
+void criarMatrizCompras(ListaCompras &lista) {
     int n = lista.clientes.size();   // numero de clientes (linhas)
     int m = lista.produtos.size();   // numero de produtos (colunas)
-    int i;
-    vector<vector<int> > A = criarMatrizInt(n, m);   // comeca tudo com 0
+    int i, j, idProduto;
 
-    // Para cada cliente i, passa pelos produtos da lista dele (idProduto vale
-    // um produto a cada volta) e marca 1 na coluna daquele produto.
+    lista.matrizCompras = criarMatrizInt(n, m);   // comeca tudo com 0
+
+    // Para cada cliente i, passa pelos produtos que ele comprou (posicao j do
+    // vetor dele) e marca 1 na coluna daquele produto.
     for (i = 0; i < n; i++) {
-        for (int idProduto : lista.prodClientes[i])
-            A[i][idProduto] = 1;
+        for (j = 0; j < (int)lista.prodClientes[i].size(); j++) {
+            idProduto = lista.prodClientes[i][j];
+            lista.matrizCompras[i][idProduto] = 1;
+        }
     }
-    return A;
+}
+
+// ---------------------------------------------------------------------------
+// liberarMatrizCompras: libera a matriz de compras (se ela foi criada).
+// ---------------------------------------------------------------------------
+void liberarMatrizCompras(ListaCompras &lista) {
+    if (lista.matrizCompras != NULL) {
+        liberarMatrizInt(lista.matrizCompras, lista.clientes.size());
+        lista.matrizCompras = NULL;   // avisa que nao existe mais
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -93,19 +154,14 @@ vector<vector<int> > criarMatrizCompras(ListaCompras &lista) {
 // A primeira linha de A vira a primeira COLUNA de T, e assim por diante.
 //   T[j][i] = A[i][j]          (e o pseudocodigo do enunciado)
 //
-// Se A tem "linhas" x "colunas", T tem "colunas" x "linhas".
+// Se A tem "linhas" x "colunas", T tem "colunas" x "linhas". Como a matriz
+// criada com malloc nao sabe o proprio tamanho, passamos as dimensoes.
 // ---------------------------------------------------------------------------
-vector<vector<int> > calcularTransposta(vector<vector<int> > &A) {
-    int linhas = A.size();
-    int colunas = 0;
+int **calcularTransposta(int **A, int linhas, int colunas) {
     int i, j;
 
-    // Se A nao esta vazia, o numero de colunas e o tamanho da primeira linha.
-    if (linhas > 0)
-        colunas = A[0].size();
-
     // T tem as dimensoes invertidas.
-    vector<vector<int> > T = criarMatrizInt(colunas, linhas);
+    int **T = criarMatrizInt(colunas, linhas);
 
     for (i = 0; i < linhas; i++) {
         for (j = 0; j < colunas; j++)
@@ -124,16 +180,10 @@ vector<vector<int> > calcularTransposta(vector<vector<int> > &A) {
 // o resultado C tem m linhas e p colunas. Sao 3 lacos um dentro do outro:
 // i escolhe a linha, j escolhe a coluna e k percorre a soma.
 // ---------------------------------------------------------------------------
-vector<vector<int> > multiplicarMatrizes(vector<vector<int> > &A, vector<vector<int> > &B) {
-    int m = A.size();   // linhas de A
-    int n = B.size();   // colunas de A = linhas de B
-    int p = 0;          // colunas de B
+int **multiplicarMatrizes(int **A, int m, int n, int **B, int p) {
     int i, j, k, soma;
 
-    if (n > 0)
-        p = B[0].size();
-
-    vector<vector<int> > C = criarMatrizInt(m, p);
+    int **C = criarMatrizInt(m, p);
 
     for (i = 0; i < m; i++) {
         for (j = 0; j < p; j++) {
@@ -149,7 +199,7 @@ vector<vector<int> > multiplicarMatrizes(vector<vector<int> > &A, vector<vector<
 // ---------------------------------------------------------------------------
 // calcularSimilaridade: junta tudo e devolve a matriz de similaridade S.
 //
-//   1) A = matriz de compras
+//   1) A = matriz de compras (criada se ainda nao existe)
 //   2) T = transposta de A
 //   3) I = A x T   -> I[i][j] = quantos produtos i e j compraram em comum
 //                     (e o produto interno da linha i com a linha j de A:
@@ -160,15 +210,22 @@ vector<vector<int> > multiplicarMatrizes(vector<vector<int> > &A, vector<vector<
 // igual para os dois. Por isso S e ASSIMETRICA: s(i,j) pode ser diferente
 // de s(j,i). Isso e desejado (explicado no enunciado): evita que quem
 // compra MUITO pareca parecido com todo mundo.
+//
+// T e I sao so intermediarias: depois de usadas, liberamos. A matriz de
+// compras continua guardada em lista.matrizCompras.
 // ---------------------------------------------------------------------------
-vector<vector<double> > calcularSimilaridade(ListaCompras &lista) {
-    int n = lista.clientes.size();
+double **calcularSimilaridade(ListaCompras &lista) {
+    int n = lista.clientes.size();   // numero de clientes
+    int m = lista.produtos.size();   // numero de produtos
     int i, j, totalI;
 
-    vector<vector<int> > A = criarMatrizCompras(lista);
-    vector<vector<int> > T = calcularTransposta(A);
-    vector<vector<int> > I = multiplicarMatrizes(A, T);
-    vector<vector<double> > S = criarMatrizDouble(n, n);   // comeca tudo 1.0
+    if (lista.matrizCompras == NULL)
+        criarMatrizCompras(lista);
+
+    int **A = lista.matrizCompras;
+    int **T = calcularTransposta(A, n, m);          // m x n
+    int **I = multiplicarMatrizes(A, n, m, T, n);   // n x n
+    double **S = criarMatrizDouble(n, n);           // comeca tudo 1.0
 
     for (i = 0; i < n; i++) {
         totalI = lista.prodClientes[i].size();   // |Pi| = produtos do cliente i
@@ -184,6 +241,9 @@ vector<vector<double> > calcularSimilaridade(ListaCompras &lista) {
             }
         }
     }
+
+    liberarMatrizInt(T, m);   // T tem m linhas
+    liberarMatrizInt(I, n);   // I tem n linhas
     return S;
 }
 
@@ -194,6 +254,6 @@ vector<vector<double> > calcularSimilaridade(ListaCompras &lista) {
 //
 // Atencao: s(i, j) e diferente de s(j, i), porque S nao e simetrica.
 // ---------------------------------------------------------------------------
-double similaridadeDensa(vector<vector<double> > &S, int i, int j) {
+double similaridadeDensa(double **S, int i, int j) {
     return S[i][j];
 }

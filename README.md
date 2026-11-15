@@ -15,7 +15,7 @@ mais bem ranqueado o produto fica.
 | `ListaCompras.h/.cpp` | A1 | Lê o CSV e organiza clientes, produtos e a lista de compras de cada cliente |
 | `Similaridade.h/.cpp` | A2 | Monta a matriz de compras e calcula a matriz de similaridade entre clientes |
 | `Recomendacao.h/.cpp` | A3 | Gera os `k` produtos mais bem ranqueados para um cliente |
-| `main.cpp` | A1, A2 e A3 | Programa testador, com um modo para cada atividade |
+| `main.cpp` | A1, A2 e A3 | Programa testador: um `switch` escolhe a atividade a executar |
 
 Os módulos não têm `main`: o programa testador fica em um arquivo separado, o `main.cpp`.
 
@@ -29,18 +29,18 @@ g++ -o sistema main.cpp ListaCompras.cpp Similaridade.cpp Recomendacao.cpp
 
 ## Como executar
 
-O programa recebe o arquivo CSV, o modo (`lista`, `similaridade` ou `recomendacao`) e,
-depois, os dados daquele modo. Exemplos com os dados do professor (pasta `dados/`):
+O programa recebe o arquivo CSV, o número da atividade (1, 2 ou 3) e, depois, os dados
+daquela atividade. Exemplos com os dados do professor (pasta `dados/`):
 
 ```
-sistema dados/dados_venda_cluster_0.csv lista 99EIP501 99PXGH01 48743701
-sistema dados/dados_venda_cluster_0.csv similaridade 153
-sistema dados/dados_venda_cluster_0.csv recomendacao 5 99EIP501 99PXGH01 48743701
+sistema dados/dados_venda_cluster_0.csv 1 99EIP501 99PXGH01 48743701
+sistema dados/dados_venda_cluster_0.csv 2 153
+sistema dados/dados_venda_cluster_0.csv 3 5 99EIP501 99PXGH01 48743701
 ```
 
-- `lista`: A1. Depois do modo vêm os códigos originais dos clientes (sem códigos, usa os 3 primeiros).
-- `similaridade`: A2. Depois do modo vem o índice do cliente (sem índice, usa o 0).
-- `recomendacao`: A3. Depois do modo vem o `k` e os códigos originais dos clientes (sem códigos, usa os 3 primeiros).
+- `1`: A1. Depois vêm os códigos originais dos clientes (sem códigos, usa os 3 primeiros).
+- `2`: A2. Depois vem o índice do cliente (sem índice, usa o 0).
+- `3`: A3. Depois vem o `k` e os códigos originais dos clientes (sem códigos, usa os 3 primeiros).
 
 No Windows, use `.\sistema` no PowerShell.
 
