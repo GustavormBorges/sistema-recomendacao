@@ -7,10 +7,11 @@
 using namespace std;
 
 struct item {
-    int produto;    
-    double score;   
+    int produto;
+    double score;
 };
 
-vector<item> recomendar(ListaCompras &lista, double **S, int cliente, int k);
+vector<item> recomendar(ListaCompras &lista, int cliente, int k);
 
 #endif
+

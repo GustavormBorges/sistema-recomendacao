@@ -1,4 +1,3 @@
-
 #ifndef SIMILARIDADE_H
 #define SIMILARIDADE_H
 
@@ -16,9 +15,12 @@ void liberarMatrizCompras(ListaCompras &lista);
 int **calcularTransposta(int **A, int linhas, int colunas);
 int **multiplicarMatrizes(int **A, int m, int n, int **B, int p);
 
-double **calcularSimilaridade(ListaCompras &lista, int algoritmo = 1);
+void criarMatrizCSR(ListaCompras &lista);
 
+double **calcularSimilaridade(ListaCompras &lista, int algoritmo = 1);
+void calcularSimilaridadeCSR(ListaCompras &lista);
+
+double similaridadeCSR(ListaCompras &lista, int i, int j);
 double similaridadeDensa(double **S, int i, int j);
 
 #endif
-

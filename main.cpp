@@ -5,6 +5,7 @@
 #include "ListaCompras.h"
 #include "Similaridade.h"
 #include "Recomendacao.h"
+#include "TesteCSR.h"
 
 using namespace std;
 
@@ -65,13 +66,13 @@ static void testarSimilaridade(ListaCompras &lista, int argc, char *argv[]) {
     liberarMatrizDouble(S, n);
 }
 
-static void mostrarRecomendacao(ListaCompras &lista, double **S, int i, int k) {
+static void mostrarRecomendacao(ListaCompras &lista, int i, int k) {
     int r;
     vector<item> recomendados;
 
     imprimirCompras(lista, i);
 
-    recomendados = recomendar(lista, S, i, k);
+    recomendados = recomendar(lista, i, k);
 
     if (recomendados.size() == 0) {
         cout << "Nenhum produto para recomendar (nenhum cliente parecido)." << endl;
@@ -98,11 +99,11 @@ static void testarRecomendacao(ListaCompras &lista, int argc, char *argv[]) {
 
     k = atoi(argv[3]);
 
-    double **S = calcularSimilaridade(lista);
+    calcularSimilaridadeCSR(lista);
 
     if (argc == 4) {
         for (i = 0; i < 3 && i < n; i++)
-            mostrarRecomendacao(lista, S, i, k);
+            mostrarRecomendacao(lista, i, k);
     } else {
         for (a = 4; a < argc; a++) {
             i = buscarCliente(lista, argv[a]);
@@ -110,14 +111,11 @@ static void testarRecomendacao(ListaCompras &lista, int argc, char *argv[]) {
             if (i == -1)
                 cout << "Cliente " << argv[a] << " nao encontrado." << endl << endl;
             else
-                mostrarRecomendacao(lista, S, i, k);
+                mostrarRecomendacao(lista, i, k);
         }
     }
-
-    liberarMatrizDouble(S, n);
 }
 
-// Compara duas matrizes de similaridade.
 static int compararSimilaridades(double **S1, double **S2, int n) {
     int i, j;
     double diferenca;
@@ -135,7 +133,6 @@ static int compararSimilaridades(double **S1, double **S2, int n) {
     return 1;
 }
 
-// Compara o desempenho dos dois algoritmos.
 static void testarDesempenho(ListaCompras &lista) {
     int n = lista.clientes.size();
     int repeticao;
@@ -151,17 +148,13 @@ static void testarDesempenho(ListaCompras &lista) {
     double **S1;
     double **S2;
 
-    // Garante que a matriz de compras ja esteja pronta.
-    if (lista.matrizCompras == NULL) {
-        criarMatrizCompras(lista);
-    }
+    criarMatrizCompras(lista);
 
     cout << "Comparacao dos algoritmos de similaridade" << endl;
     cout << "Clientes: " << n << endl;
     cout << "Produtos: " << lista.produtos.size() << endl;
     cout << "Repeticoes: " << REPETICOES << endl << endl;
 
-    // Executa cinco vezes o algoritmo padrao.
     for (repeticao = 0; repeticao < REPETICOES; repeticao++) {
         inicio = clock();
 
@@ -170,13 +163,11 @@ static void testarDesempenho(ListaCompras &lista) {
         fim = clock();
 
         tempoPadrao = (double)(fim - inicio) / CLOCKS_PER_SEC;
-
         somaPadrao += tempoPadrao;
 
         liberarMatrizDouble(S1, n);
     }
 
-    // Executa cinco vezes o algoritmo otimizado.
     for (repeticao = 0; repeticao < REPETICOES; repeticao++) {
         inicio = clock();
 
@@ -185,13 +176,11 @@ static void testarDesempenho(ListaCompras &lista) {
         fim = clock();
 
         tempoOtimizado = (double)(fim - inicio) / CLOCKS_PER_SEC;
-
         somaOtimizado += tempoOtimizado;
 
         liberarMatrizDouble(S2, n);
     }
 
-    // Calcula as medias.
     tempoPadrao = somaPadrao / REPETICOES;
     tempoOtimizado = somaOtimizado / REPETICOES;
 
@@ -213,7 +202,6 @@ static void testarDesempenho(ListaCompras &lista) {
         cout << "Os dois algoritmos tiveram o mesmo tempo." << endl;
     }
 
-    // Calcula novamente as matrizes para verificar os resultados.
     cout << endl << "Verificando os resultados..." << endl;
 
     S1 = calcularSimilaridade(lista, 1);
@@ -239,6 +227,7 @@ int main(int argc, char *argv[]) {
         cout << "  " << argv[0] << " <arquivo.csv> 2 [indice_cliente]" << endl;
         cout << "  " << argv[0] << " <arquivo.csv> 3 <k> [cod_cliente ...]" << endl;
         cout << "  " << argv[0] << " <arquivo.csv> 4" << endl;
+        cout << "  " << argv[0] << " <arquivo.csv> 5" << endl;
         return 1;
     }
 
@@ -266,8 +255,12 @@ int main(int argc, char *argv[]) {
             testarDesempenho(lista);
             break;
 
+        case 5:
+            testarCSR(lista);
+            break;
+
         default:
-            cout << "Opcao invalida: " << argv[2] << " (use 1, 2, 3 ou 4)" << endl;
+            cout << "Opcao invalida: " << argv[2] << " (use 1, 2, 3, 4 ou 5)" << endl;
             liberarMatrizCompras(lista);
             return 1;
     }
@@ -276,6 +269,4 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
-
-
 
