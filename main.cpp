@@ -1,4 +1,5 @@
 #include <iostream>
+#include <stdio.h>
 #include <stdlib.h>
 #include <ctime>
 #include <iomanip>
@@ -9,60 +10,68 @@
 
 using namespace std;
 
-static string perguntar(string pergunta) {
-    string resposta;
+static void perguntar(const char *pergunta, char *resposta, int tamanho) {
+    int i;
 
     cout << pergunta;
-    getline(cin, resposta);
+    cout.flush();
 
-    return resposta;
+    resposta[0] = '\0';
+    if (fgets(resposta, tamanho, stdin) == NULL)
+        resposta[0] = '\0';
+
+    for (i = 0; resposta[i] != '\0'; i++) {
+        if (resposta[i] == '\n' || resposta[i] == '\r') {
+            resposta[i] = '\0';
+            break;
+        }
+    }
+}
+
+static void mostrarCliente(ListaCompras &lista, char *codigo) {
+    int i = buscarCliente(lista, codigo);
+
+    if (i == -1)
+        cout << "Cliente " << codigo << " nao encontrado." << endl;
+    else
+        imprimirCompras(lista, i);
 }
 
 static void testarLista(ListaCompras &lista, int argc, char *argv[]) {
     int i, a;
-    string codigo;
-    vector<string> codigos;
+    char codigo[50];
 
-    for (a = 3; a < argc; a++)
-        codigos.push_back(argv[a]);
-
-    if (codigos.size() == 0) {
-        codigo = perguntar("Codigo do cliente (ENTER para ver os 3 primeiros): ");
-        cout << endl;
-
-        if (codigo != "")
-            codigos.push_back(codigo);
+    if (argc > 3) {
+        for (a = 3; a < argc; a++)
+            mostrarCliente(lista, argv[a]);
+        return;
     }
 
-    if (codigos.size() == 0) {
+    perguntar("Codigo do cliente (ENTER para ver os 3 primeiros): ", codigo, 50);
+    cout << endl;
+
+    if (codigo[0] == '\0') {
         for (i = 0; i < 3 && i < (int)lista.clientes.size(); i++)
             imprimirCompras(lista, i);
     } else {
-        for (a = 0; a < (int)codigos.size(); a++) {
-            i = buscarCliente(lista, codigos[a]);
-
-            if (i == -1)
-                cout << "Cliente " << codigos[a] << " nao encontrado." << endl;
-            else
-                imprimirCompras(lista, i);
-        }
+        mostrarCliente(lista, codigo);
     }
 }
 
 static void testarSimilaridade(ListaCompras &lista, int argc, char *argv[]) {
     int n = lista.clientes.size();
     int i, j, maisSimilar;
-    string texto;
+    char texto[50];
 
     i = 0;
     if (argc >= 4) {
         i = atoi(argv[3]);
     } else {
-        texto = perguntar("Indice do cliente (ENTER para o cliente 0): ");
+        perguntar("Indice do cliente (ENTER para o cliente 0): ", texto, 50);
         cout << endl;
 
-        if (texto != "")
-            i = atoi(texto.c_str());
+        if (texto[0] != '\0')
+            i = atoi(texto);
     }
 
     if (i < 0 || i >= n) {
@@ -117,48 +126,50 @@ static void mostrarRecomendacao(ListaCompras &lista, int i, int k) {
     cout << endl;
 }
 
+static void recomendarPorCodigo(ListaCompras &lista, char *codigo, int k) {
+    int i = buscarCliente(lista, codigo);
+
+    if (i == -1)
+        cout << "Cliente " << codigo << " nao encontrado." << endl << endl;
+    else
+        mostrarRecomendacao(lista, i, k);
+}
+
 static void testarRecomendacao(ListaCompras &lista, int argc, char *argv[]) {
     int n = lista.clientes.size();
     int k, i, a;
-    string codigo;
-    vector<string> codigos;
+    char texto[50];
+    char codigo[50];
 
-    if (argc >= 4)
+    if (argc >= 4) {
         k = atoi(argv[3]);
-    else
-        k = atoi(perguntar("Quantos produtos recomendar (k)? ").c_str());
+    } else {
+        perguntar("Quantos produtos recomendar (k)? ", texto, 50);
+        k = atoi(texto);
+    }
 
     if (k < 1) {
         cout << "k invalido. Use um numero maior que 0." << endl;
         return;
     }
 
-    for (a = 4; a < argc; a++)
-        codigos.push_back(argv[a]);
-
-    if (codigos.size() == 0) {
-        codigo = perguntar("Codigo do cliente (ENTER para os 3 primeiros): ");
+    codigo[0] = '\0';
+    if (argc <= 4) {
+        perguntar("Codigo do cliente (ENTER para os 3 primeiros): ", codigo, 50);
         cout << endl;
-
-        if (codigo != "")
-            codigos.push_back(codigo);
     }
 
     cout << "Calculando a similaridade entre os clientes..." << endl << endl;
     calcularSimilaridadeCSR(lista);
 
-    if (codigos.size() == 0) {
+    if (argc > 4) {
+        for (a = 4; a < argc; a++)
+            recomendarPorCodigo(lista, argv[a], k);
+    } else if (codigo[0] == '\0') {
         for (i = 0; i < 3 && i < n; i++)
             mostrarRecomendacao(lista, i, k);
     } else {
-        for (a = 0; a < (int)codigos.size(); a++) {
-            i = buscarCliente(lista, codigos[a]);
-
-            if (i == -1)
-                cout << "Cliente " << codigos[a] << " nao encontrado." << endl << endl;
-            else
-                mostrarRecomendacao(lista, i, k);
-        }
+        recomendarPorCodigo(lista, codigo, k);
     }
 }
 
