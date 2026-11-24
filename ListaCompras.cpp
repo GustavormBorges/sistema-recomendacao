@@ -25,40 +25,21 @@ static int contem(vector<int> &produtosCliente, int produto) {
 }
 
 static int lerLinha(FILE *arquivo, char *cliente, char *produto, char *nome) {
-    char linha[300];  
-    char data[20];   
-    int lidos;        
-    int ok;          
+    char linha[300];
+    char data[20];
+    int lidos;
 
     while (fgets(linha, sizeof(linha), arquivo) != NULL) {
-        ok = 0;
-
         lidos = sscanf(linha, "%19[^,],%19[^,],%19[^,],%199[^\r\n]",
                        data, cliente, produto, nome);
 
         if (lidos == 4) {
-            if (strlen(data) == 8) {
-                
-                ok = 1;
-            } else {
-                
-                lidos = sscanf(linha, "%*[^,],%*[^,],%19[^,],%19[^,],%199[^\r\n]",
-                               cliente, produto, nome);
-
-                
-                if (lidos == 3)
-                    ok = 1;
-            }
+            tirarEspacos(nome);
+            return 1;
         }
-
-        if (ok == 1) {
-            tirarEspacos(nome);   
-            return 1;             
-        }
-        
     }
 
-    return 0;   
+    return 0;
 }
 
 int lerDados(char *caminhoArquivo, ListaCompras &lista) {

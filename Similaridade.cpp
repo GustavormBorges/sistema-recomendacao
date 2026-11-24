@@ -178,9 +178,7 @@ double **calcularSimilaridade(ListaCompras &lista, int algoritmo) {
         int totalI = lista.prodClientes[i].size();
 
         for (int j = 0; j < n; j++) {
-            if (totalI > 0) {
-                S[i][j] = 1.0 - (double) I[i][j] / totalI;
-            }
+            S[i][j] = 1.0 - (double) I[i][j] / totalI;
         }
     }
 
@@ -245,12 +243,7 @@ void calcularSimilaridadeCSR(ListaCompras &lista) {
                 lista.matrizIntersecoes.col_index.push_back(j);
             }
 
-            if (totalI > 0) {
-                valor = 1.0 - (double)intersecao / totalI;
-            }
-            else {
-                valor = 1.0;
-            }
+            valor = 1.0 - (double)intersecao / totalI;
 
             if (valor != 0.0) {
                 lista.matrizSimilaridadeCSR.values.push_back(valor);
