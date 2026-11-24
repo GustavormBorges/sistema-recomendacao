@@ -3,7 +3,7 @@
 #include <algorithm>
 #include "Similaridade.h"
 
-int **criarMatrizInt(int linhas, int colunas) {
+static int **criarMatrizInt(int linhas, int colunas) {
     int **M = (int **) malloc(linhas * sizeof(int *));
 
     for (int i = 0; i < linhas; i++) {
@@ -17,7 +17,7 @@ int **criarMatrizInt(int linhas, int colunas) {
     return M;
 }
 
-double **criarMatrizDouble(int linhas, int colunas) {
+static double **criarMatrizDouble(int linhas, int colunas) {
     double **M = (double **) malloc(linhas * sizeof(double *));
 
     for (int i = 0; i < linhas; i++) {
@@ -31,7 +31,7 @@ double **criarMatrizDouble(int linhas, int colunas) {
     return M;
 }
 
-void liberarMatrizInt(int **M, int linhas) {
+static void liberarMatrizInt(int **M, int linhas) {
     if (M == NULL) {
         return;
     }
@@ -104,7 +104,7 @@ void criarMatrizCSR(ListaCompras &lista) {
     }
 }
 
-int **calcularTransposta(int **A, int linhas, int colunas) {
+static int **calcularTransposta(int **A, int linhas, int colunas) {
     int **T = criarMatrizInt(colunas, linhas);
 
     for (int i = 0; i < linhas; i++) {
@@ -116,7 +116,7 @@ int **calcularTransposta(int **A, int linhas, int colunas) {
     return T;
 }
 
-int **multiplicarMatrizes(int **A, int m, int n, int **B, int p) {
+static int **multiplicarMatrizes(int **A, int m, int n, int **B, int p) {
     int **C = criarMatrizInt(m, p);
 
     for (int i = 0; i < m; i++) {
@@ -130,7 +130,7 @@ int **multiplicarMatrizes(int **A, int m, int n, int **B, int p) {
     return C;
 }
 
-int **calcularIntersecoesDireto(int **A, int n, int m) {
+static int **calcularIntersecoesDireto(int **A, int n, int m) {
     int **I = criarMatrizInt(n, n);
 
     for (int i = 0; i < n; i++) {

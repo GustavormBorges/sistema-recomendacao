@@ -31,7 +31,8 @@ g++ -o sistema main.cpp ListaCompras.cpp Similaridade.cpp Recomendacao.cpp Teste
 ## Como executar
 
 O programa recebe o arquivo CSV, o número da atividade (1 a 5) e, depois, os dados
-daquela atividade. Exemplos com os dados do professor (pasta `dados/`):
+daquela atividade. Se algum dado não for digitado, o programa pergunta na hora.
+Exemplos com os dados do professor (pasta `dados/`):
 
 ```
 sistema dados/dados_venda_cluster_0.csv 1 99EIP501 99PXGH01 48743701
@@ -41,10 +42,13 @@ sistema dados/dados_venda_cluster_0.csv 4
 sistema dados/dados_venda_cluster_0.csv 5
 ```
 
-- `1`: A1. Depois vêm os códigos originais dos clientes (sem códigos, usa os 3 primeiros).
-- `2`: A2. Depois vem o índice do cliente (sem índice, usa o 0). Usa a matriz densa.
-- `3`: A3. Depois vem o `k` e os códigos originais dos clientes (sem códigos, usa os 3
-  primeiros). A similaridade vem da matriz CSR.
+- `1`: A1. Depois vêm os códigos originais dos clientes. Sem códigos, o programa pergunta
+  um código (ENTER usa os 3 primeiros).
+- `2`: A2. Depois vem o índice do cliente. Sem índice, o programa pergunta (ENTER usa o
+  0). Usa a matriz densa.
+- `3`: A3. Depois vem o `k` (quantos produtos recomendar) e os códigos originais dos
+  clientes. O que faltar, o programa pergunta (ENTER usa os 3 primeiros clientes). A
+  similaridade vem da matriz CSR.
 - `4`: A4. Compara o algoritmo padrão (com transposta) com o adaptado (sem transposta,
   aproveitando a simetria): mede o tempo médio de cada um e confere se os resultados
   são iguais.

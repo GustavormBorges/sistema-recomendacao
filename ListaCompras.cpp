@@ -1,17 +1,6 @@
 #include <stdio.h>   
-#include <string.h>   
 #include <iostream>   
 #include "ListaCompras.h"
-
-static void tirarEspacos(char *texto) {
-    int tamanho = strlen(texto);   
-
-   
-    while (tamanho > 0 && texto[tamanho - 1] == ' ') {
-        texto[tamanho - 1] = '\0';   
-        tamanho--;                  
-    }
-}
 
 static int contem(vector<int> &produtosCliente, int produto) {
     int j;
@@ -34,7 +23,6 @@ static int lerLinha(FILE *arquivo, char *cliente, char *produto, char *nome) {
                        data, cliente, produto, nome);
 
         if (lidos == 4) {
-            tirarEspacos(nome);
             return 1;
         }
     }
