@@ -273,15 +273,9 @@ static void testarDesempenho(ListaCompras &lista, int argc, char *argv[]) {
 
         cout << "Algoritmo " << a << " - " << nomeAlgoritmo(a)
              << ": " << tempo[a] << " segundos" << endl;
-
-        if (tempo[a] < tempo[maisRapido])
-            maisRapido = a;
     }
 
     if (algoritmo == 0) {
-        cout << endl << "Mais rapido: algoritmo " << maisRapido
-             << " - " << nomeAlgoritmo(maisRapido) << endl;
-
         cout << endl << "Verificando os resultados do padrao e do adaptado..." << endl;
 
         S1 = calcularSimilaridade(lista, 1);
