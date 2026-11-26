@@ -190,88 +190,111 @@ static int compararSimilaridades(double **S1, double **S2, int n) {
     return 1;
 }
 
-static void testarDesempenho(ListaCompras &lista) {
-    int n = lista.clientes.size();
-    int repeticao;
-    const int REPETICOES = 5;
+static const char *nomeAlgoritmo(int algoritmo) {
+    if (algoritmo == 1)
+        return "Padrao (com transposta)";
+    if (algoritmo == 2)
+        return "Adaptado (sem transposta)";
+    return "CSR (matriz esparsa)";
+}
 
+static double medirAlgoritmo(ListaCompras &lista, int algoritmo, int repeticoes) {
+    int n = lista.clientes.size();
+    int r;
+    double soma = 0.0;
+    double **S = NULL;
     clock_t inicio, fim;
 
-    double somaPadrao = 0.0;
-    double somaOtimizado = 0.0;
+    for (r = 0; r < repeticoes; r++) {
+        inicio = clock();
 
-    double tempoPadrao, tempoOtimizado;
+        if (algoritmo == 3)
+            calcularSimilaridadeCSR(lista);
+        else
+            S = calcularSimilaridade(lista, algoritmo);
 
+        fim = clock();
+
+        soma += (double)(fim - inicio) / CLOCKS_PER_SEC;
+
+        if (algoritmo != 3)
+            liberarMatrizDouble(S, n);
+    }
+
+    return soma / repeticoes;
+}
+
+static void testarDesempenho(ListaCompras &lista, int argc, char *argv[]) {
+    int n = lista.clientes.size();
+    int algoritmo, a, primeiro, ultimo, maisRapido;
+    const int REPETICOES = 5;
+    char texto[50];
+    double tempo[4];
     double **S1;
     double **S2;
 
-    criarMatrizCompras(lista);
+    if (argc >= 4) {
+        algoritmo = atoi(argv[3]);
+    } else {
+        perguntar("Algoritmo (1 = padrao, 2 = adaptado, 3 = CSR, ENTER = todos): ", texto, 50);
+        cout << endl;
 
-    cout << "Comparacao dos algoritmos de similaridade" << endl;
+        algoritmo = 0;
+        if (texto[0] != '\0')
+            algoritmo = atoi(texto);
+    }
+
+    if (algoritmo < 0 || algoritmo > 3) {
+        cout << "Algoritmo invalido. Use 1, 2 ou 3." << endl;
+        return;
+    }
+
+    primeiro = 1;
+    ultimo = 3;
+    if (algoritmo != 0) {
+        primeiro = algoritmo;
+        ultimo = algoritmo;
+    }
+
+    // as matrizes de compras ficam prontas antes: so a similaridade e medida
+    criarMatrizCompras(lista);
+    criarMatrizCSR(lista);
+
+    cout << "Tempo de resposta do calculo da similaridade" << endl;
     cout << "Clientes: " << n << endl;
     cout << "Produtos: " << lista.produtos.size() << endl;
     cout << "Repeticoes: " << REPETICOES << endl << endl;
 
-    for (repeticao = 0; repeticao < REPETICOES; repeticao++) {
-        inicio = clock();
-
-        S1 = calcularSimilaridade(lista, 1);
-
-        fim = clock();
-
-        tempoPadrao = (double)(fim - inicio) / CLOCKS_PER_SEC;
-        somaPadrao += tempoPadrao;
-
-        liberarMatrizDouble(S1, n);
-    }
-
-    for (repeticao = 0; repeticao < REPETICOES; repeticao++) {
-        inicio = clock();
-
-        S2 = calcularSimilaridade(lista, 2);
-
-        fim = clock();
-
-        tempoOtimizado = (double)(fim - inicio) / CLOCKS_PER_SEC;
-        somaOtimizado += tempoOtimizado;
-
-        liberarMatrizDouble(S2, n);
-    }
-
-    tempoPadrao = somaPadrao / REPETICOES;
-    tempoOtimizado = somaOtimizado / REPETICOES;
-
     cout << fixed << setprecision(6);
 
-    cout << "Tempo medio do algoritmo 1 - Padrao: "
-         << tempoPadrao << " segundos" << endl;
+    maisRapido = primeiro;
+    for (a = primeiro; a <= ultimo; a++) {
+        tempo[a] = medirAlgoritmo(lista, a, REPETICOES);
 
-    cout << "Tempo medio do algoritmo 2 - Otimizado: "
-         << tempoOtimizado << " segundos" << endl;
+        cout << "Algoritmo " << a << " - " << nomeAlgoritmo(a)
+             << ": " << tempo[a] << " segundos" << endl;
 
-    cout << endl;
-
-    if (tempoPadrao > tempoOtimizado) {
-        cout << "O algoritmo otimizado foi mais rapido." << endl;
-    } else if (tempoOtimizado > tempoPadrao) {
-        cout << "O algoritmo padrao foi mais rapido." << endl;
-    } else {
-        cout << "Os dois algoritmos tiveram o mesmo tempo." << endl;
+        if (tempo[a] < tempo[maisRapido])
+            maisRapido = a;
     }
 
-    cout << endl << "Verificando os resultados..." << endl;
+    if (algoritmo == 0) {
+        cout << endl << "Mais rapido: algoritmo " << maisRapido
+             << " - " << nomeAlgoritmo(maisRapido) << endl;
 
-    S1 = calcularSimilaridade(lista, 1);
-    S2 = calcularSimilaridade(lista, 2);
+        cout << endl << "Verificando os resultados do padrao e do adaptado..." << endl;
 
-    if (compararSimilaridades(S1, S2, n)) {
-        cout << "Os resultados dos dois algoritmos sao iguais." << endl;
-    } else {
-        cout << "Os resultados dos dois algoritmos sao diferentes." << endl;
+        S1 = calcularSimilaridade(lista, 1);
+        S2 = calcularSimilaridade(lista, 2);
+
+        if (compararSimilaridades(S1, S2, n))
+            cout << "Os resultados sao iguais." << endl;
+        else
+            cout << "Os resultados sao diferentes." << endl;
+
+        liberarMatrizDouble(S1, n);
+        liberarMatrizDouble(S2, n);
     }
-
-    liberarMatrizDouble(S1, n);
-    liberarMatrizDouble(S2, n);
 }
 
 int main(int argc, char *argv[]) {
@@ -283,7 +306,7 @@ int main(int argc, char *argv[]) {
         cout << "  " << argv[0] << " <arquivo.csv> 1 [cod_cliente ...]" << endl;
         cout << "  " << argv[0] << " <arquivo.csv> 2 [indice_cliente]" << endl;
         cout << "  " << argv[0] << " <arquivo.csv> 3 [k] [cod_cliente ...]" << endl;
-        cout << "  " << argv[0] << " <arquivo.csv> 4" << endl;
+        cout << "  " << argv[0] << " <arquivo.csv> 4 [algoritmo]" << endl;
         cout << "  " << argv[0] << " <arquivo.csv> 5" << endl;
         cout << "O que estiver entre [ ] e nao for digitado sera perguntado." << endl;
         return 1;
@@ -313,7 +336,7 @@ int main(int argc, char *argv[]) {
             break;
 
         case 4:
-            testarDesempenho(lista);
+            testarDesempenho(lista, argc, argv);
             break;
 
         case 5:
