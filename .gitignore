@@ -1,3 +1,7 @@
 *.exe
 *.o
 sistema
+build/
+*.pyd
+__pycache__/
+.venv/
